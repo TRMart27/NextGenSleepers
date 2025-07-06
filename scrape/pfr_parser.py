@@ -4,10 +4,12 @@ FETCHERS ONLY - DOES NOT PARSE, only acts as an inbetween
 user and http.py
 '''
 
-import datatime as _dt
+import datetime as _dt
 
-from .. import config
-import http
+import config
+from scrape.http import HttpClient
+import scrape.http as http
+
 
 #get the year ranges
 _MIN_YEAR = 1936
@@ -26,7 +28,7 @@ def prospects_url(year: int) -> str:
     :return: string URL to PFR
     '''
     _validate_year(year)
-    return f"{config.PFR_PROSPECTS_ROOT}{year}.htm"
+    return f"{config.PFR_PROSPECTS_ROOT}{year}_prospects.htm"
 
 
 def draft_url(year: int) -> str:
@@ -37,12 +39,14 @@ def draft_url(year: int) -> str:
     _validate_year(year)
     return f"{config.PFR_DRAFT_ROOT}{year}/draft.htm"
 
+
 # ---- HTTPClient wrappers ----
-def _http_client(client: HTTPClient) -> None:
-    return c or config.get_client()
+def _http_client(client: HttpClient) -> None:
+    return client or http.get_client()
+
 
 def fetch_prospects_page(year: int,
-                         *, client: HTTPClient = None) -> str:
+                         *, client: HttpClient = None) -> str:
     """
     Download the HTML for <year>
 
@@ -52,10 +56,10 @@ def fetch_prospects_page(year: int,
     """
 
     request_url = prospects_url(year)
-    return _http_client(client).get(request_url).text
+    return _http_client(client).send_request(request_url).text
 
 def fetch_draft_page(year: int,
-                     *, client: HTTPClient = None) -> str:
+                     *, client: HttpClient = None) -> str:
     """
     Download the HTML for <year>
 
@@ -63,4 +67,21 @@ def fetch_draft_page(year: int,
     :param client: OPTIONAL HTTPClient besides default
     :return      : HTML page as string
     """
-    
+    request_url = draft_url(year)
+    return _http_client(client).send_request(request_url).text
+
+def fetch_player_page(href: str,
+                      *, client: HttpClient = None) -> str:
+    '''
+    Download single players college-stats page
+
+    :param href  : URL to players college-stats
+    :param client: OPTIONAL HttpClient besides default
+    :return      : HTML page as string
+    '''
+    if not href:
+        raise ValueError("[ERROR] No URL provided! <fetch_player_page>")
+
+    if not href.startswith('http'):
+        href = f"https://www.sports-reference.com{href}"
+    return _http_client(client).send_request(href).text

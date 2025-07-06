@@ -10,11 +10,13 @@ import logging
 
 from collections import deque
 from typing import Deque
+from typing import Dict
+from typing import Any
 
 import requests
 from urllib3.util.retry import Retry
 
-from .. import config
+import config
 
 #get mesa a logger !
 logger = logging.getLogger(__name__)
@@ -40,13 +42,14 @@ class HttpClient:
         self.session = session or requests.Session()
 
         retry = Retry(
-            total=config.MAX_RETRIES,
-            connect=config.MAX_RETRIES,
-            read=config.MAX_RETRIES,
+            total=config.MAX_RETIRES,
+            connect=config.MAX_RETIRES,
+            read=config.MAX_RETIRES,
             backoff_factor=config.BACKOFF_FACTOR,
-            status_forcelist=[500, 502, 503, 504],
+            status_forcelist=[429, 500, 502, 503, 504],
             allowed_methods=["GET", "POST"],
             raise_on_status=False,
+            respect_retry_after_header=True,
         )
 
         adapter = requests.adapters.HTTPAdapter(max_retries=retry)
@@ -56,36 +59,46 @@ class HttpClient:
 
 
 # ---- HTTP request implementations ----
-    def send_request(self, request_url: str):
+    def send_request(self, request_url: str,
+                     *, headers: Dict[str, str] = None,
+                        params: Dict[str, Any] = None ):
         self._respect_limit()
 
+        print(headers, params)
         #be weird
-        time.sleep(random.uniform(1.27, 2.84))
+        time.sleep(random.uniform(1.87, 2.84))
         #now go
         response = self.session.get(request_url, timeout=(4, 10))
         if response.status_code == 429:
-            logger.warning(f"[HTTPClient] 429 Received - sleeping through jail {self.jail_time}")
-            time.sleep(self.jail_time)
-
-            #try again
-            response = self.session.get(request_url)
+            print(f"\t\t\t[DEBUG | HttpClient] 429 Received URL => {request_url}")
 
         response.raise_for_status()
         return response
 
 
 
-    def _respect_limit(self):
+    def _respect_limit(self) -> None:
         time_stamp = time.time()
-        time_since_head = time_stamp - self.jail_time
 
-        if len(self._recent_calls) == self.max_requests and time_since_head < self.cooldown:
-            wait_time = self.cooldown - time_since_head
-            logger.debug(f"[INFO - HTTPClient] Throttling... ({wait_time})")
-            time.sleep(wait_time)
+        #just add and return
+        if len(self._recent_calls) < self.max_requests:
+            self._recent_calls.appendleft(time_stamp)
+            return
 
-        time_stamp = time.time()
-        self._recent_calls.append(time_stamp)
+        oldest_call = self._recent_calls[-1]
+        difference = time_stamp - oldest_call
+        #check cooldown
+
+        if difference < self.cooldown:
+            throttle_time = self.cooldown - difference
+            logger.debug(f"[DEBUG] Throttling for {throttle_time:.2f}")
+            time.sleep(throttle_time)
+
+            #update timestamp after sleeping
+            time_stamp = time.time()
+
+        self._recent_calls.appendleft(time_stamp)
+
 
 
     #python OOP context management
@@ -102,7 +115,9 @@ _client = None
 def get_client() -> HttpClient:
     global _client
     if _client is None:
-        _client = HttpClient()
+        _client = HttpClient(cooldown=config.REQUEST_COOLDOWN,
+                             jail_time=config.REQUEST_JAIL,
+                             max_requests=config.REQUEST_MAX)
     return _client
 
 

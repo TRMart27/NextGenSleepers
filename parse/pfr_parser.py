@@ -12,7 +12,7 @@ from bs4 import Tag
 from bs4 import Comment
 
 import config
-from pos_models import Player, get_position_class
+from pos_models import Player
 from pos_models import get_position_class
 from pos_models import NFLDraftee
 
@@ -21,7 +21,7 @@ POSITION_SCHEMA = {
     "QB": {
         "standards": {
             "passing_standard": [
-                "games", "pass_att", "pass_td", "pass_cmp_pct", "pass_yds", "pass_int", "pass_rating"
+                "games", "games_started", "pass_att", "pass_td", "pass_cmp_pct", "pass_yds", "pass_int", "pass_rating"
             ],
             "rushing_standard": ["rush_att", "rush_yds", "rush_td"],
         },
@@ -57,11 +57,11 @@ POSITION_SCHEMA = {
     "DT": {
         "standards": {
             "defense_standard": [
-                "games", "tackles_solo", "tackles_assists", "tackles_loss", "sacks", "def_int", "pass_defended", "fumbles_rec", "fumble_rec_yds", "fumbles_forced",
+                "games", "tackles_solo", "tackles_assists", "tackles_loss", "sacks", "def_int", "pass_defended", "fumbles_rec", "fumbles_forced",
             ]
         },
         "type_int": {
-            "games", "rec", "rec_yds", "rec_td", "rush_att", "rush_yds", "rush_td",
+            "games", "tackles_solo", "tackles_assists", "tackles_loss", "def_int", "pass_defended", "fumbles_rec", "fumble_rec_yds", "fumbles_forced",
         },
     },
     "CB": {
@@ -185,6 +185,11 @@ def parse_prospect_page(html: str) -> Dict[str, List[Player]]:
     return all_players
 
 def parse_draft_page(html: str) -> Dict[str, List[Player]]:
+    '''
+
+    :param html:
+    :return:
+    '''
     #soupify
     soup = BeautifulSoup(html, "html.parser")
     all_players = defaultdict(list)
@@ -260,3 +265,39 @@ def parse_player_page(html: str, player: Player) -> Player:
                 value = _to_float(raw_text)
             setattr(player, field, value)
     return player
+
+
+def parse_height_weight(html: str, athlete):
+    '''
+
+    :param html:
+    :param player:
+
+    :return:
+    '''
+    soup = BeautifulSoup(html, "html.parser")
+    re_height_weight = re.compile(r"\b\d{1,2}-\d{1,2}\b")
+
+    for p in soup.find_all("p"):
+        if "lb" not in p.get_text():
+            continue
+
+        spans = p.find_all("span")
+        if len(spans) < 2:
+            continue
+
+        height_text = spans[0].get_text(strip=True)
+        weight_text = spans[1].get_text(strip=True)
+
+        if not re_height_weight.fullmatch(height_text) or not weight_text.endswith("lb"):
+            continue
+
+        feet, inch = map(int, height_text.split("-"))
+
+        height = feet * 12 + inch
+        weight = int(re.sub(r"\D", "", weight_text))
+
+        athlete.player.height = height
+        athlete.player.weight = weight
+
+        return

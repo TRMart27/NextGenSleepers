@@ -11,7 +11,7 @@ from typing import Final, List, Dict
 
                         # ---- Define Paths ---- #
 
-BASE_DIR : Final[Path] = Path(__file__).parent.resolve().parent
+BASE_DIR : Final[Path] = Path(__file__).parent.resolve()
 DATA_DIR : Final[Path] = BASE_DIR / "data"
 CACHE_DIR: Final[Path] = BASE_DIR / "cache"
 

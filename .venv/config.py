@@ -4,9 +4,12 @@ for the project.
 """
 
 import os
+from dotenv import load_dotenv
 from pathlib import Path
 from typing import Final, List, Dict
 
+
+load_dotenv()
 # ---- Define Paths ---- #
 
 BASE_DIR: Final[Path] = Path(__file__).parent.resolve()

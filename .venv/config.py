@@ -38,6 +38,7 @@ BACKOFF_FACTOR: Final[float] = float(os.getenv("PFR_BACKOFF_FACTOR", 3.0))
 PFR_PROSPECTS_ROOT: Final[str] = "https://www.pro-football-reference.com/draft/"
 PFR_DRAFT_ROOT: Final[str] = "https://www.pro-football-reference.com/years/"
 CFBD_API_ROOT: Final[str] = "https://api.collegefootballdata.com/"
+SPORTS_REF_ROOT: Final[str] = "https://www.sports-reference.com"
 
 # ---- Secrets ---- #
 

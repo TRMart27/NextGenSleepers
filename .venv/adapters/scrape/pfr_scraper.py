@@ -83,5 +83,5 @@ def fetch_player_page(href: str,
         raise ValueError("[ERROR] No URL provided! <fetch_player_page>")
 
     if not href.startswith('http'):
-        href = f"https://www.sports-reference.com{href}"
+        href = f"{config.SPORTS_REF_ROOT}{href}"
     return _http_client(client).send_request(href).text

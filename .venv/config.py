@@ -12,7 +12,7 @@ from typing import Final, List, Dict
 load_dotenv()
 # ---- Define Paths ---- #
 
-BASE_DIR: Final[Path] = Path(__file__).parent.resolve()
+BASE_DIR: Final[Path] = Path(__file__).parent.resolve().parent
 DATA_DIR: Final[Path] = BASE_DIR / "data"
 CACHE_DIR: Final[Path] = BASE_DIR / "cache"
 

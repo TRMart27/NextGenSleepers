@@ -2,7 +2,6 @@ import config
 import adapters.parse.pfr_parser as Parser
 from adapters.scrape.draft import stat_path
 import core.models as Models
-import db.sqlite as DB
 
 from collections import defaultdict
 

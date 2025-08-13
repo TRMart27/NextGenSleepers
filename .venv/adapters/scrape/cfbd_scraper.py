@@ -8,10 +8,7 @@ from cfbd.rest import ApiException
 from functools import lru_cache
 import logging
 
-from typing import Dict
-from typing import Any
-from typing import List
-from typing import Optional
+from typing import Dict, Any, List, Optional
 
 import datetime as dt
 import time

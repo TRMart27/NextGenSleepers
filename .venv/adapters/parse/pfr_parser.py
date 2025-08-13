@@ -6,16 +6,15 @@ import re
 from typing import List, Dict, Any, Optional
 from collections import defaultdict
 
-import pos_models
 from bs4 import BeautifulSoup
 from bs4 import Tag
 from bs4 import Comment
 
 import config
-from pos_models import Player
-from pos_models import make_player
-from pos_models import make_draftee
-from pos_models import NFLDraftee
+from core.models import Player
+from core.models import make_player
+from core.models import make_draftee
+from core.models import NFLDraftee
 
 # ---- Define positional attributes
 POSITION_SCHEMA = {

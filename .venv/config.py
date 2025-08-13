@@ -42,7 +42,7 @@ CFBD_API_ROOT: Final[str] = "https://api.collegefootballdata.com/"
 # ---- Secrets ---- #
 
 CFBD_API_KEY: Final[str | None] = os.getenv(
-    "CFBD_API_KEY", "cij65DpP8rbi7c252kjeJCgscF6hYtuwDXH2EaIO7ULRJO7+4uaFTzzkx7hvuyVh"
+    "CFBD_API_KEY", None
 ).strip()
 if CFBD_API_KEY is None:
     print("[ERROR] CFBD API Key not loaded!")

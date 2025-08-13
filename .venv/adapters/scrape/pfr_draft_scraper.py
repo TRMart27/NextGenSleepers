@@ -6,7 +6,6 @@ import config
 import adapters.http.client as http
 import adapters.scrape.pfr_scraper as Scraper
 import core.models as Models
-import db.json as Store
 
 from typing import Dict
 from typing import List

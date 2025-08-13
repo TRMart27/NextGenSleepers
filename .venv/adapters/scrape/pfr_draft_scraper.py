@@ -11,7 +11,9 @@ from typing import Dict
 from typing import List
 
 import os
+import logging
 
+logger = logging.getLogger(__name__)
 
 #---- Helper Functions ----
 def _cache_html(html: str, filepath: str):
@@ -23,24 +25,24 @@ def _cache_html(html: str, filepath: str):
         with open(filepath, "w", encoding="utf-8") as file_ref:
             file_ref.write(html)
     except Exception as e:
-        print(f"[ERROR] Unexpected error: {e}")
+        logger.debug(f" Unexpected error: {e}")
         return
 
-    print(f"[INFO] Cached html at {filepath}")
+    logger.info(f"Cached html at {filepath}")
     return
 
 
 def _load_html(path: str) -> str:
 
     if not os.path.exists(path):
-        print(f"[ERROR] File not found: {path}")
+        logger.debug(f"File not found: {path}")
         return None
 
     try:
         with open(path, "r", encoding="utf-8") as file_ref:
             return file_ref.read()
     except Exception as e:
-        print(f"[ERROR] Unexpected Erorr: {e}")
+        logger.debug(f"Unexpected Erorr: {e}")
         return None
 
 def clean_name(name: str) -> str:
@@ -48,8 +50,8 @@ def clean_name(name: str) -> str:
     strips whitespaces'''
 
     if not name:
-        print('[ERROR] Invalid player name <normalize_name>')
-        return ""
+        logger.debug('Invalid player name <normalize_name>')
+        raise ValueError("Invalid player name <normalize_name>")
 
     return name.replace(" ", "")
 
@@ -85,18 +87,13 @@ def fetch_draft_pages(year_start: int, year_end: int,
         save_path = os.path.join(config.CACHE_DIR, _page_path(year))
 
         #check
-        if os.path.exists(save_path):
-            html = _load_html(path=save_path)
-        else:
-            #scrape
+        html = _load_html if os.path.exists(save_path) else None
+        if html is None:
             html = Scraper.fetch_draft_page(year=year, client=client)
             if html is None:
-                print(f'[WARNING] Failed to fetch draft from {year}')
+                logger.warning(f"Failed to fetch draft page for year {year}")
                 continue
-
-            #persist
             _cache_html(html=html, filepath=save_path)
-        #store
         out[year] = html
 
     return out
@@ -127,14 +124,13 @@ def fetch_drafted_profile_html(drafted_players: Dict[int, Dict[str, List[Models.
                 save_path = os.path.join(config.CACHE_DIR, stat_path(year, position, athlete.name.name))
 
                 #load if cached
-                if os.path.exists(save_path):
-                    html = _load_html(path=save_path)
-                else:
-                   html = Scraper.fetch_player_page(href=athlete.stats_link, client=client)
-                   if html is None:
-                       print(f'[WARNING] Failed to fetch page for {athlete.player}')
-                       continue
-                   _cache_html(html=html, filepath=save_path)
+                html = _load_html if os.path.exists(save_path) else None
+                if html is None:
+                    html = Scraper.fetch_player_page(href=athlete.stats_link, client=client)
+                    if html is None:
+                        logger.warning(f"Failed to fetch page for {athlete.player}")
+                    #persist
+                    _cache_html(html=html, filepath=save_path)
 
                 #append
                 stats_htmls.append(html)

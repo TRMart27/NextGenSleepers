@@ -1,5 +1,5 @@
 '''
-implements global HTTP session, rety method,
+implements global HTTP session, retry method,
 polite requests, respecting PFR robots.txt
 '''
 
@@ -9,11 +9,10 @@ import random
 import logging
 
 from collections import deque
-from typing import Deque
-from typing import Dict
-from typing import Any
+from typing import Deque, Dict, Any, Tuple
 
 import requests
+from requests.exceptions import HTTPError
 from urllib3.util.retry import Retry
 
 import config
@@ -21,16 +20,16 @@ import config
 #get mesa a logger !
 logger = logging.getLogger(__name__)
 
+
 class HttpClient:
     '''
     Respectful HTTP helper that's reusable
     '''
 
-    _recent_calls: Deque[float]
 
     def __init__(self,
-                 cooldown: int,
-                 jail_time: int,
+                 cooldown: float,
+                 jail_time: float,
                  max_requests: int,
                  session: requests.Session = None):
 
@@ -38,8 +37,8 @@ class HttpClient:
         self.jail_time = jail_time
         self.max_requests = max_requests
 
-        self._recent_calls = deque(maxlen=max_requests)
-        self.session = session or requests.Session()
+        self._recent_calls: Deque[float] = deque(maxlen=max_requests)
+        self._session: requests.Session = session or requests.Session()
 
         retry = Retry(
             total=config.MAX_RETIRES,
@@ -61,27 +60,40 @@ class HttpClient:
 # ---- HTTP request implementations ----
     def send_request(self, request_url: str,
                      *, headers: Dict[str, str] = None,
-                        params: Dict[str, Any] = None ):
+                        params: Dict[str, Any] = None,
+                        timeout: Tuple[float] = (4.0, 10.0)):
         self._respect_limit()
 
-        print(headers, params)
         #be weird
-        time.sleep(random.uniform(1.87, 2.84))
+        time.sleep(random.uniform(0.0, 0.2))
         #now go
-        response = self.session.get(request_url, headers, params, timeout=(4, 10))
-        if response.status_code == 429:
-            print(f"\t\t\t[DEBUG | HttpClient] 429 Received URL => {request_url}")
-            print(f"\t\t\t[HttpClient] Sleeping through Jail! -> {self.jail_time} seconds")
-            time.sleep(self.jail_time)
+        response = self.session.get(request_url,
+                                    params=params,
+                                    headers=headers,
+                                    timeout=timeout
+        )
 
-        response.raise_for_status()
+        if response.status_code == 429:
+            logger.debug(f"429 for {request_url}, sleeping {self.jail_time} then retrying")
+            time.sleep(self.jail_time)
+            response = self.session.get(request_url,
+                                        params=params,
+                                        headers=headers,
+                                        timeout=timeout
+            )
+
+        try:
+           response.raise_for_status()
+        except HTTPError as e:
+                logger.debug(f"HTTP Error {response.status_code} for {request_url}: {response.text}")
+                raise
 
         return response
 
 
 
     def _respect_limit(self) -> None:
-        time_stamp = time.time()
+        time_stamp = time.monotonic()
 
         #just add and return
         if len(self._recent_calls) < self.max_requests:
@@ -98,7 +110,7 @@ class HttpClient:
             time.sleep(throttle_time)
 
             #update timestamp after sleeping
-            time_stamp = time.time()
+            time_stamp = time.monotonic()
 
         self._recent_calls.appendleft(time_stamp)
 
@@ -109,11 +121,14 @@ class HttpClient:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.session.close()
-        return False
+        self._session.close()
 
 
-def get_client() -> HttpClient:
-    return HttpClient(cooldown=config.REQUEST_COOLDOWN,
-                      jail_time=config.REQUEST_JAIL,    
-                      max_requests=config.REQUEST_MAX)
+def get_client(*,
+               cooldown: float = config.REQUEST_COOLDOWN,
+               jail_time: float = config.REQUEST_JAIL,
+               max_requests: int = config.REQUEST_MAX) -> HttpClient:
+
+    return HttpClient(cooldown=cooldown,
+                      jail_time=jail_time,
+                      max_requests=max_requests)

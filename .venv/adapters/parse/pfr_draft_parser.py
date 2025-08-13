@@ -1,14 +1,16 @@
 import config
 import adapters.parse.pfr_parser as Parser
-from adapters.scrape.draft import stat_path
+from adapters.scrape.pfr_draft_scraper import stat_path
 import core.models as Models
 
 from collections import defaultdict
 
-from typing import Dict
-from typing import List
+from typing import Dict, List
 
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 def parse_draft_pages(pages: Dict[int, str])\
     -> Dict[int, Dict[str, List[Models.NFLDraftee]]]:
@@ -25,7 +27,7 @@ def parse_draft_pages(pages: Dict[int, str])\
         drafted_players[year] = Parser.parse_draft_page(html=html)
 
     if len(drafted_players) == 0:
-        print("[WARNING] Drafted Players is empty! <parse_draft_pages>")
+        logger.warning("Drafted Players is empty! <parse_draft_pages>")
 
     return drafted_players
 
@@ -34,17 +36,18 @@ def parse_draftee_stat_pages(drafted_players: Dict[int, Dict[str, List[Models.NF
     ''' Enriches NFLDraftee stats from cached html files'''
 
     if len(drafted_players) == 0:
-        print("[ERROR] No players drafted! <parse_draftee_stat_pages>")
+        logger.debug(" No players drafted! <parse_draftee_stat_pages>")
         return
 
     for year, position_list in drafted_players.items():
         for position, position_players in position_list.items():
             for athlete in position_players:
-                filepath = os.path.join(config.CACHE_DIR, stat_path(year=year, position=position, name=athlete.name.name))
+                name = getattr(athlete.player, "name", None) or getattr(athlete, "name", None)
+                filepath = os.path.join(config.CACHE_DIR, stat_path(year=year, position=position, name=name))
 
                 #skip if not cached
                 if not os.path.exists(filepath):
-                    print(f"[INFO] Cache missing html for {athlete.player.name}")
+                    logger.info(f"Cache missing html for {name}")
                     continue
 
                 #load from cache
@@ -52,7 +55,7 @@ def parse_draftee_stat_pages(drafted_players: Dict[int, Dict[str, List[Models.NF
                     with open(filepath, "r", encoding="utf-8") as file_ref:
                         html = file_ref.read()
                 except Exception as e:
-                    print(f"[ERROR] Unexpected error while reading: {e}")
+                    logger.debug(f"Unexpected error while reading: {e}")
                     continue
 
                 #enrich profile     inplace

@@ -11,11 +11,11 @@ from bs4 import Tag
 from bs4 import Comment
 
 import config
-from core.models import Player
-from core.models import make_player
-from core.models import make_draftee
-from core.models import NFLDraftee
+from core.models import Player, make_player, make_draftee, NFLDraftee
 
+import logging
+
+logger = logging.getLogger(__name__)
 # ---- Define positional attributes
 POSITION_SCHEMA = {
     "QB": {
@@ -108,7 +108,7 @@ def _to_float(text: str) -> Optional[float]:
     except ValueError:
         return None
 
-def _height_to_inches(height: float) -> Optional[int]:
+def _height_to_inches(height: str) -> Optional[int]:
     if not height or "-" not in height:
         return None
     feet, inches = height.split("-")
@@ -148,7 +148,7 @@ def parse_prospect_page(html: str) -> Dict[str, List[Player]]:
     for pos in POSITION_SCHEMA.keys():
         table = soup.find("table", {"id": f"prospects_{pos}"})
         if table is None:
-            print(f"[ERROR] Failed to find table for {pos}")
+            logger.warning(f"Failed to find table for {pos}")
             continue
 
         rows = table.tbody.find_all("tr", recursive=False)
@@ -196,8 +196,8 @@ def parse_draft_page(html: str) -> Dict[str, List[Player]]:
 
     table = soup.find("table", {"id": "drafts"})
     if not table or not table.tfoot:
-        print("[ERROR] No table found")
-        return None
+        logger.warning("[ERROR] No table found")
+        return {}
 
     for row in table.tbody.find_all("tr"):
         position = _clean_cell(row.find("td", {"data-stat": "pos"}))
@@ -210,15 +210,15 @@ def parse_draft_page(html: str) -> Dict[str, List[Player]]:
         except AttributeError:
             href = None
 
-        if position not in config.NFL_POSITION_MAP.keys():
+        if position not in config.NFL_POSITION_MAP:
             continue
 
         #draftee
+        mapped_position = config.NFL_POSITION_MAP[position]
         pick     = _to_int(_clean_cell(row.find("td", {"data-stat": "draft_pick"})))
         career_av = _to_int(_clean_cell(row.find("td", {"data-stat": "career_av"})))
-        mapped_position = config.NFL_POSITION_MAP[position]
 
-        player = get_position_class(
+        player = make_draftee(
             position=mapped_position,
             name=name,
             age=age,
@@ -230,18 +230,17 @@ def parse_draft_page(html: str) -> Dict[str, List[Player]]:
         )
 
         if not isinstance(player, NFLDraftee):
-            print(f'[WARNING] Something went wrong bro - {name}')
+            logger.warning(f'Something went wrong bro - {name}')
+            continue
 
         all_players[mapped_position].append(player)
     return all_players
 
 
-
-
 def parse_player_page(html: str, player: Player) -> None:
 
     if player.position not in POSITION_SCHEMA:
-        raise ValueError(f"[ERROR] Invalid position {player.position}")
+        raise ValueError(f"Invalid position {player.position}")
 
     soup = BeautifulSoup(html, "html.parser")
     all_players = {}
@@ -250,6 +249,7 @@ def parse_player_page(html: str, player: Player) -> None:
     for table_id, fields in position_schema['standards'].items():
         table = soup.find("table", {"id": table_id})
         if not table or not table.tfoot:
+            logger.warning(f"Table {table_id} missing for {player.name}")
             continue
 
         career_row = table.tfoot.find("tr", {"id": f"{table_id}.Career"})

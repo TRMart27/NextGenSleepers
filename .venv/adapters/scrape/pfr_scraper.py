@@ -7,8 +7,7 @@ user and http.py
 import datetime as _dt
 
 import config
-from scrapers.my_http import HttpClient
-import scrapers.my_http as http
+import adapters.http.client as http
 
 
 #get the year ranges
@@ -41,12 +40,12 @@ def draft_url(year: int) -> str:
 
 
 # ---- HTTPClient wrappers ----
-def _http_client(client: HttpClient) -> None:
+def _http_client(client: http.HttpClient) -> http.HttpClient:
     return client or http.get_client()
 
 
 def fetch_prospects_page(year: int,
-                         *, client: HttpClient = None) -> str:
+                         *, client: http.HttpClient = None) -> str:
     """
     Download the HTML for <year>
 
@@ -59,7 +58,7 @@ def fetch_prospects_page(year: int,
     return _http_client(client).send_request(request_url).text
 
 def fetch_draft_page(year: int,
-                     *, client: HttpClient = None) -> str:
+                     *, client: http.HttpClient = None) -> str:
     """
     Download the HTML for <year>
 
@@ -71,7 +70,7 @@ def fetch_draft_page(year: int,
     return _http_client(client).send_request(request_url).text
 
 def fetch_player_page(href: str,
-                      *, client: HttpClient = None) -> str:
+                      *, client: http.HttpClient = None) -> str:
     '''
     Download single players college-stats page
 

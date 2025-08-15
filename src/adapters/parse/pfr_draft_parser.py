@@ -1,6 +1,7 @@
 from src import config
 import src.adapters.parse.pfr_parser as Parser
 from src.adapters.scrape.pfr_draft_scraper import stat_path
+import src.core.models as models
 
 from collections import defaultdict
 
@@ -63,7 +64,7 @@ def parse_draftee_stat_pages(
                         html = file_ref.read()
                 except Exception as e:
                     logger.debug(f"Unexpected error while reading: {e}")
-                    continues
+                    continue
 
                 if not html:
                     logger.warning(f"Empty HTML from cache for {name}")

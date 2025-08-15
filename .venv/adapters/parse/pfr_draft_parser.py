@@ -56,8 +56,11 @@ def parse_draftee_stat_pages(drafted_players: Dict[int, Dict[str, List[Models.NF
                         html = file_ref.read()
                 except Exception as e:
                     logger.debug(f"Unexpected error while reading: {e}")
-                    continue
+                    continues
 
+                if not html:
+                    logger.warning(f"Empty HTML from cache for {name}")
+                    continue
                 #enrich profile     inplace
                 Parser.parse_player_page(html=html, player=athlete.player)
 

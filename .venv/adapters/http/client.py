@@ -52,9 +52,9 @@ class HttpClient:
         )
 
         adapter = requests.adapters.HTTPAdapter(max_retries=retry)
-        self.session.mount('http://', adapter)
-        self.session.mount('https://', adapter)
-        self.session.headers.update({"User-Agent": config.USER_AGENT})
+        self._session.mount('http://', adapter)
+        self._session.mount('https://', adapter)
+        self._session.headers.update({"User-Agent": config.USER_AGENT})
 
 
 # ---- HTTP request implementations ----
@@ -67,7 +67,7 @@ class HttpClient:
         #be weird
         time.sleep(random.uniform(0.0, 0.2))
         #now go
-        response = self.session.get(request_url,
+        response = self._session.get(request_url,
                                     params=params,
                                     headers=headers,
                                     timeout=timeout
@@ -76,7 +76,7 @@ class HttpClient:
         if response.status_code == 429:
             logger.debug(f"429 for {request_url}, sleeping {self.jail_time} then retrying")
             time.sleep(self.jail_time)
-            response = self.session.get(request_url,
+            response = self._session.get(request_url,
                                         params=params,
                                         headers=headers,
                                         timeout=timeout

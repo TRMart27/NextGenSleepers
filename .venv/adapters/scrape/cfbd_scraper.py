@@ -14,14 +14,14 @@ import datetime as dt
 import time
 import pandas as pd
 
-import config
+from config import CFBD_API_KEY
 import core.models as Models
 
 
 logger = logging.getLogger(__name__)
 
 API_CONFIG = cfbd.Configuration(
-    access_token = config.CFBD_API_KEY
+    access_token = CFBD_API_KEY
 )
 
 # ---- Helper Functions ----

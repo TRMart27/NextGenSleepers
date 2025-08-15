@@ -100,7 +100,7 @@ def _to_int(text: str) -> Optional[int]:
     except ValueError:
         return None
 
-def _to_float(text: str) -> Optional[float]:
+def _to_float(text: Optional[str]) -> Optional[float]:
     if text is None:
         return None
     try:
@@ -108,7 +108,7 @@ def _to_float(text: str) -> Optional[float]:
     except ValueError:
         return None
 
-def _height_to_inches(height: str) -> Optional[int]:
+def _height_to_inches(height: Optional[str]) -> Optional[int]:
     if not height or "-" not in height:
         return None
     feet, inches = height.split("-")
@@ -117,7 +117,7 @@ def _height_to_inches(height: str) -> Optional[int]:
     except ValueError:
         return None
 
-def _uncomment_tables(html: str) -> str:
+def _uncomment_tables(html: Optional[str]) -> str:
     '''
     Helper function to uncomment the position
     tables from the raw html

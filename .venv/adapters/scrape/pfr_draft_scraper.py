@@ -65,7 +65,7 @@ def stat_path(year: int, position: str, name: str) -> str:
 def _page_path(year: int) -> str:
     ''' Builds the relative filepath to the page HTML '''
 
-    return os.path.join("pages", f"{year}.html")
+    return os.path.join(config.CACHE_DIR, "data", "raw", "pages", f"{year}.html")
 
 
 
@@ -87,7 +87,7 @@ def fetch_draft_pages(year_start: int, year_end: int,
         save_path = os.path.join(config.CACHE_DIR, _page_path(year))
 
         #check
-        html = _load_html if os.path.exists(save_path) else None
+        html = _load_html(save_path) if os.path.exists(save_path) else None
         if html is None:
             html = Scraper.fetch_draft_page(year=year, client=client)
             if html is None:
@@ -121,10 +121,10 @@ def fetch_drafted_profile_html(drafted_players: Dict[int, Dict[str, List[Models.
                     continue
 
                 #build path
-                save_path = os.path.join(config.CACHE_DIR, stat_path(year, position, athlete.name.name))
+                save_path = os.path.join(config.CACHE_DIR, stat_path(year, position, athlete.player.name))
 
                 #load if cached
-                html = _load_html if os.path.exists(save_path) else None
+                html = _load_html(save_path) if os.path.exists(save_path) else None
                 if html is None:
                     html = Scraper.fetch_player_page(href=athlete.stats_link, client=client)
                     if html is None:

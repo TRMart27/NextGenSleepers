@@ -4,3 +4,4 @@ cfbd==5.9.4
 beautifulsoup4==4.13.4
 python-dotenv==1.1.1
 pandas==2.3.1
+black==25.1.0

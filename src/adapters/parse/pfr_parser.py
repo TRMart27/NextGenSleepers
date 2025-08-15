@@ -1,6 +1,6 @@
-'''
+"""
 HTML parsers for Pro-Football-Reference pages.
-'''
+"""
 
 import re
 from typing import List, Dict, Optional
@@ -21,67 +21,156 @@ POSITION_SCHEMA = {
     "QB": {
         "standards": {
             "passing_standard": [
-                "games", "games_started", "pass_att", "pass_td", "pass_cmp_pct", "pass_yds", "pass_int", "pass_rating"
+                "games",
+                "games_started",
+                "pass_att",
+                "pass_td",
+                "pass_cmp_pct",
+                "pass_yds",
+                "pass_int",
+                "pass_rating",
             ],
             "rushing_standard": ["rush_att", "rush_yds", "rush_td"],
         },
         "type_int": {
-            "games", "pass_yds", "pass_td", "pass_att", "pass_int", "rush_att", "rush_yds", "rush_td"
+            "games",
+            "pass_yds",
+            "pass_td",
+            "pass_att",
+            "pass_int",
+            "rush_att",
+            "rush_yds",
+            "rush_td",
         },
     },
     "RB": {
         "standards": {
             "rushing_standard": [
-                "games", "rush_att", "rush_yds", "rush_td", "rec", "rec_yds", "rec_td"]
+                "games",
+                "rush_att",
+                "rush_yds",
+                "rush_td",
+                "rec",
+                "rec_yds",
+                "rec_td",
+            ]
         },
         "type_int": {
-            "games", "rush_att", "rush_yds", "rush_td", "rec", "rec_yds", "rec_td"
-        }
+            "games",
+            "rush_att",
+            "rush_yds",
+            "rush_td",
+            "rec",
+            "rec_yds",
+            "rec_td",
+        },
     },
     "WR": {
         "standards": {
             "receiving_standard": [
-                "games", "rec", "rec_yds", "rec_td", "rush_att", "rush_yds", "rush_td",
+                "games",
+                "rec",
+                "rec_yds",
+                "rec_td",
+                "rush_att",
+                "rush_yds",
+                "rush_td",
             ]
         },
         "type_int": {
-            "games", "rec", "rec_yds", "rec_td", "rush_att", "rush_yds", "rush_td"
+            "games",
+            "rec",
+            "rec_yds",
+            "rec_td",
+            "rush_att",
+            "rush_yds",
+            "rush_td",
         },
     },
     "OL": {
-        "standards": {
-            "defense_standard": ["games"]
-        },
+        "standards": {"defense_standard": ["games"]},
         "type_int": {"games"},
     },
     "DT": {
         "standards": {
             "defense_standard": [
-                "games", "tackles_solo", "tackles_assists", "tackles_loss", "sacks", "def_int", "pass_defended", "fumbles_rec", "fumbles_forced",
+                "games",
+                "tackles_solo",
+                "tackles_assists",
+                "tackles_loss",
+                "sacks",
+                "def_int",
+                "pass_defended",
+                "fumbles_rec",
+                "fumbles_forced",
             ]
         },
         "type_int": {
-            "games", "tackles_solo", "tackles_assists", "tackles_loss", "def_int", "pass_defended", "fumbles_rec", "fumble_rec_yds", "fumbles_forced",
+            "games",
+            "tackles_solo",
+            "tackles_assists",
+            "tackles_loss",
+            "def_int",
+            "pass_defended",
+            "fumbles_rec",
+            "fumble_rec_yds",
+            "fumbles_forced",
         },
     },
     "CB": {
         "standards": {
             "defense_standard": [
-                "games", "tackles_solo", "tackles_assists", "tackles_loss", "def_int", "def_int_yds", "pass_defended", "fumbles_rec", "fumbles_forced",
+                "games",
+                "tackles_solo",
+                "tackles_assists",
+                "tackles_loss",
+                "def_int",
+                "def_int_yds",
+                "pass_defended",
+                "fumbles_rec",
+                "fumbles_forced",
             ]
         },
         "type_int": {
-            "games", "tackles_solo", "tackles_assists", "tackles_loss", "def_int", "def_int_yds", "pass_defended", "fumbles_rec", "fumble_rec_yds", "fumbles_forced",
+            "games",
+            "tackles_solo",
+            "tackles_assists",
+            "tackles_loss",
+            "def_int",
+            "def_int_yds",
+            "pass_defended",
+            "fumbles_rec",
+            "fumble_rec_yds",
+            "fumbles_forced",
         },
     },
     "OLB": {
         "standards": {
             "defense_standard": [
-                "games", "tackles_solo", "tackles_assists", "tackles_loss", "sacks", "def_int", "def_int_yds", "pass_defended", "fumbles_rec", "fumble_rec_yds", "fumbles_forced",
+                "games",
+                "tackles_solo",
+                "tackles_assists",
+                "tackles_loss",
+                "sacks",
+                "def_int",
+                "def_int_yds",
+                "pass_defended",
+                "fumbles_rec",
+                "fumble_rec_yds",
+                "fumbles_forced",
             ]
         },
         "type_int": {
-            "games", "tackles_solo", "tackles_assists", "tackles_loss", "def_int", "def_int_yds", "pass_defended", "fumbles_rec", "fumble_rec_yds", "fumbles_forced"
+            "games",
+            "tackles_solo",
+            "tackles_assists",
+            "tackles_loss",
+            "def_int",
+            "def_int_yds",
+            "pass_defended",
+            "fumbles_rec",
+            "fumble_rec_yds",
+            "fumbles_forced",
         },
     },
 }
@@ -89,8 +178,10 @@ POSITION_SCHEMA = {
 
 # ---- Helper Functions ----
 
+
 def _clean_cell(cell: Tag) -> Optional[str]:
     return cell.text.strip() if cell else None
+
 
 def _to_int(text: str) -> Optional[int]:
     if text is None:
@@ -100,6 +191,7 @@ def _to_int(text: str) -> Optional[int]:
     except ValueError:
         return None
 
+
 def _to_float(text: Optional[str]) -> Optional[float]:
     if text is None:
         return None
@@ -107,6 +199,7 @@ def _to_float(text: Optional[str]) -> Optional[float]:
         return float(text.strip())
     except ValueError:
         return None
+
 
 def _height_to_inches(height: Optional[str]) -> Optional[int]:
     if not height or "-" not in height:
@@ -117,31 +210,33 @@ def _height_to_inches(height: Optional[str]) -> Optional[int]:
     except ValueError:
         return None
 
+
 def _uncomment_tables(html: Optional[str]) -> str:
-    '''
+    """
     Helper function to uncomment the position
     tables from the raw html
 
     :param html:
     :return:
-    '''
+    """
     soup = BeautifulSoup(html, "html.parser")
 
     for node in soup.find_all(text=True):
-        #if node is a comment with <table tag
+        # if node is a comment with <table tag
         if isinstance(node, Comment) and "<table" in node:
-            #replace with itself
+            # replace with itself
             table_fragment = BeautifulSoup(node, "html.parser")
             node.replace_with(table_fragment)
 
     return str(soup)
 
+
 # ---- PFR Parsing ----
 def parse_prospect_page(html: str) -> Dict[str, List[Player]]:
-    #ensure all tables are present
+    # ensure all tables are present
     html = _uncomment_tables(html)
 
-    #soupify
+    # soupify
     soup = BeautifulSoup(html, "html.parser")
     all_players = {}
 
@@ -160,14 +255,14 @@ def parse_prospect_page(html: str) -> Dict[str, List[Player]]:
                 continue
             name = _clean_cell(name_cell)
 
-            age    = _to_int(_clean_cell(row.find("td", {"data-stat": "age"})))
+            age = _to_int(_clean_cell(row.find("td", {"data-stat": "age"})))
             height = _clean_cell(row.find("td", {"data-stat": "height"}))
             height = _height_to_inches(height)
             weight = _to_int(_clean_cell(row.find("td", {"data-stat": "weight"})))
             college = _clean_cell(row.find("td", {"data-stat": "college_name"}))
 
             try:
-                href = row.find("td", {"data-stat": "cfb"}).a['href']
+                href = row.find("td", {"data-stat": "cfb"}).a["href"]
             except Exception:
                 href = None
 
@@ -184,13 +279,14 @@ def parse_prospect_page(html: str) -> Dict[str, List[Player]]:
         all_players[pos] = players
     return all_players
 
+
 def parse_draft_page(html: str) -> Dict[str, List[Player]]:
-    '''
+    """
 
     :param html:
     :return:
-    '''
-    #soupify
+    """
+    # soupify
     soup = BeautifulSoup(html, "html.parser")
     all_players = defaultdict(list)
 
@@ -201,21 +297,21 @@ def parse_draft_page(html: str) -> Dict[str, List[Player]]:
 
     for row in table.tbody.find_all("tr"):
         position = _clean_cell(row.find("td", {"data-stat": "pos"}))
-        name     = _clean_cell(row.find("td", {"data-stat": "player"}))
-        age      = _to_int(_clean_cell(row.find("td", {"data-stat": "age"})))
-        college  = _clean_cell(row.find("td", {"data-stat": "college_id"}))
+        name = _clean_cell(row.find("td", {"data-stat": "player"}))
+        age = _to_int(_clean_cell(row.find("td", {"data-stat": "age"})))
+        college = _clean_cell(row.find("td", {"data-stat": "college_id"}))
 
         try:
-            href = row.find("td", {"data-stat": "college_link"}).a['href']
+            href = row.find("td", {"data-stat": "college_link"}).a["href"]
         except AttributeError:
             href = None
 
         if position not in config.NFL_POSITION_MAP:
             continue
 
-        #draftee
+        # draftee
         mapped_position = config.NFL_POSITION_MAP[position]
-        pick     = _to_int(_clean_cell(row.find("td", {"data-stat": "draft_pick"})))
+        pick = _to_int(_clean_cell(row.find("td", {"data-stat": "draft_pick"})))
         career_av = _to_int(_clean_cell(row.find("td", {"data-stat": "career_av"})))
 
         player = make_draftee(
@@ -224,13 +320,12 @@ def parse_draft_page(html: str) -> Dict[str, List[Player]]:
             age=age,
             college=college,
             stats_link=href,
-            \
             pick=pick,
-            career_av=career_av
+            career_av=career_av,
         )
 
         if not isinstance(player, NFLDraftee):
-            logger.warning(f'Something went wrong bro - {name}')
+            logger.warning(f"Something went wrong bro - {name}")
             continue
 
         all_players[mapped_position].append(player)
@@ -246,7 +341,7 @@ def parse_player_page(html: str, player: Player) -> None:
     all_players = {}
 
     position_schema = POSITION_SCHEMA[player.position]
-    for table_id, fields in position_schema['standards'].items():
+    for table_id, fields in position_schema["standards"].items():
         table = soup.find("table", {"id": table_id})
         if not table or not table.tfoot:
             logger.warning(f"Table {table_id} missing for {player.name}")
@@ -259,7 +354,7 @@ def parse_player_page(html: str, player: Player) -> None:
         for field in fields:
             cell = career_row.find("td", {"data-stat": field})
             raw_text = _clean_cell(cell)
-            if field in position_schema['type_int']:
+            if field in position_schema["type_int"]:
                 value = _to_int(raw_text)
             else:
                 value = _to_float(raw_text)
@@ -267,13 +362,13 @@ def parse_player_page(html: str, player: Player) -> None:
 
 
 def parse_height_weight(html: str, athlete):
-    '''
+    """
 
     :param html:
     :param player:
 
     :return:
-    '''
+    """
     soup = BeautifulSoup(html, "html.parser")
     re_height_weight = re.compile(r"\b\d{1,2}-\d{1,2}\b")
 
@@ -288,7 +383,9 @@ def parse_height_weight(html: str, athlete):
         height_text = spans[0].get_text(strip=True)
         weight_text = spans[1].get_text(strip=True)
 
-        if not re_height_weight.fullmatch(height_text) or not weight_text.endswith("lb"):
+        if not re_height_weight.fullmatch(height_text) or not weight_text.endswith(
+            "lb"
+        ):
             continue
 
         feet, inch = map(int, height_text.split("-"))

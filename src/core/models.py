@@ -82,7 +82,7 @@ class OffensiveLinemen(Player):
 
 @dataclass()
 class DefensiveLinemen(Player):
-    games: Optional[int]= None
+    games: Optional[int] = None
     tackles_solo: Optional[int] = None
     tackles_assists: Optional[int] = None
     tackles_loss: Optional[int] = None
@@ -133,31 +133,31 @@ POSITION_CLASS_MAP: Dict[str, Type[Player]] = {
 }
 
 
-def make_player(position: str,
-                **kwargs) -> Player:
-    '''
+def make_player(position: str, **kwargs) -> Player:
+    """
 
     :param position:
     :param kwargs:
     :return:
-    '''
+    """
     position = position.upper()
     position_class = POSITION_CLASS_MAP.get(position)
     if position_class is None:
         raise ValueError(f"[ERROR] Invalid Position: {position} <make_player>")
     return position_class(position=position, **kwargs)
 
-def make_draftee(position: str,
-                 *, pick: int, career_av: Optional[int] = None,
-                 **kwargs) -> NFLDraftee[Player]:
-    '''
+
+def make_draftee(
+    position: str, *, pick: int, career_av: Optional[int] = None, **kwargs
+) -> NFLDraftee[Player]:
+    """
 
     :param position:
     :param pick:
     :param career_av:
     :param kwargs:
     :return:
-    '''
+    """
 
     player = make_player(position, **kwargs)
     return NFLDraftee(player=player, pick=pick, career_av=career_av)

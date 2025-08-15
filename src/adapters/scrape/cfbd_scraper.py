@@ -1,6 +1,6 @@
-'''
+"""
 Calls CollegeFootballData.com API
-'''
+"""
 
 import cfbd
 
@@ -14,34 +14,33 @@ from src.config import CFBD_API_KEY
 
 logger = logging.getLogger(__name__)
 
-API_CONFIG = cfbd.Configuration(
-    access_token = CFBD_API_KEY
-)
+API_CONFIG = cfbd.Configuration(access_token=CFBD_API_KEY)
+
 
 # ---- Helper Functions ----
 def _client():
     return cfbd.ApiClient(API_CONFIG)
 
+
 def normalize_team_name(team_name: str) -> str:
-    '''
+    """
     Helper to normalize team name to
     expected format
         *lowercase + replace spaces with underscores
 
     :param team_name: STRING representing college team
     :return: formatted team name
-    '''
+    """
     if not team_name:
         return None
 
     return team_name.lower().replace(" ", "_")
 
+
 # ---- Public Functions ----
 @lru_cache(maxsize=128)
-def search_player(name: str, *,
-                  position: str = None,
-                  team: str = None):
-    '''
+def search_player(name: str, *, position: str = None, team: str = None):
+    """
     API wrapper to fetch base attributes
 
     :param name: name of the player
@@ -49,32 +48,27 @@ def search_player(name: str, *,
     :param team: OPTIONAL team of the player
 
     :return: Player object
-    '''
+    """
     print(f"Searching... {name}, {position}, {team}")
     with _client() as client:
         api = cfbd.PlayersApi(client)
-        player_hits = api.search_players(
-            search_term=name,
-            team=team,
-            position=position
-        )
+        player_hits = api.search_players(search_term=name, team=team, position=position)
 
     if not player_hits:
         raise ValueError(f"No matching players for {name} | {position} | {team}")
 
     return player_hits
 
-def active_seasons(player_id, *,
-                   team: str = None,
-                   category: str = None):
-    '''
+
+def active_seasons(player_id, *, team: str = None, category: str = None):
+    """
 
     :param player_id:
     :param team:
     :param category:
 
     :return:
-    '''
+    """
     with _client() as client:
         api = cfbd.StatsApi(client)
 
@@ -82,10 +76,11 @@ def active_seasons(player_id, *,
 
         for year in range(2018, dt.datetime.now().year - 1):
             try:
-                rows = api.get_player_season_stats(year=year,
-                                                   category=category,
-                                                   team=team,
-                                                   season_type=cfbd.SeasonType.REGULAR
+                rows = api.get_player_season_stats(
+                    year=year,
+                    category=category,
+                    team=team,
+                    season_type=cfbd.SeasonType.REGULAR,
                 )
             except cfbd.ApiException as e:
                 if e.status == 500:
@@ -94,13 +89,13 @@ def active_seasons(player_id, *,
                     continue
                 raise
 
-            #nothing found, skip
+            # nothing found, skip
             if not rows:
                 continue
 
             seen_ids = []
             for item in rows:
-                #skip seen players
+                # skip seen players
                 if item.player_id in seen_ids:
                     continue
 
@@ -109,22 +104,24 @@ def active_seasons(player_id, *,
                     break
         return res
 
-def get_play_stats(player_id: int, *,
-                   year: int = None,
-                   team: str = None,
-                   ):
-    '''
+
+def get_play_stats(
+    player_id: int,
+    *,
+    year: int = None,
+    team: str = None,
+):
+    """
 
     :param player_id:
     :param year:
     :param team:
 
     :return:
-    '''
+    """
 
     with _client() as client:
         api = cfbd.PlaysApi(client)
-
 
         try:
             print(player_id, year, team)
@@ -142,19 +139,20 @@ def get_play_stats(player_id: int, *,
 
     return response
 
+
 def list_play_types():
-   '''
+    """
 
-   :return: Prints valid play_types to stdout
-   '''
+    :return: Prints valid play_types to stdout
+    """
 
-   with _client() as client:
+    with _client() as client:
         api = cfbd.PlaysApi(client)
 
         try:
-           response = api.get_play_types()
-           for type in response:
-               print(type.text)
+            response = api.get_play_types()
+            for play_types in response:
+                print(play_types.text)
 
         except Exception as e:
             print(f"[ERROR] Unexpected Error\n{e}")
@@ -162,22 +160,23 @@ def list_play_types():
         return
 
 
-def get_plays(*,
-              year: int = None,
-              team: str = None,
-              offense: str = None,
-              defense: str = None,
-              ):
-    '''
+def get_plays(
+    *,
+    year: int = None,
+    team: str = None,
+    offense: str = None,
+    defense: str = None,
+):
+    """
 
+    :param offense:
     :param player_id:
     :param year:
     :param team:
     :param play_type:
 
     :return:
-    '''
-
+    """
 
     with _client() as client:
 
@@ -199,4 +198,4 @@ def get_plays(*,
 
         except Exception as e:
             print(f"[ERROR] Unexpected Error\n{e}")
-            return None 
+            return None

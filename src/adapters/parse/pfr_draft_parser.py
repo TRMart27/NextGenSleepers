@@ -11,14 +11,16 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def parse_draft_pages(pages: Dict[int, str])\
-    -> Dict[int, Dict[str, List[models.NFLDraftee]]]:
-    '''
+
+def parse_draft_pages(
+    pages: Dict[int, str],
+) -> Dict[int, Dict[str, List[models.NFLDraftee]]]:
+    """
 
     :param pages:
 
     :return:
-    '''
+    """
 
     drafted_players = defaultdict(dict)
 
@@ -31,8 +33,10 @@ def parse_draft_pages(pages: Dict[int, str])\
     return drafted_players
 
 
-def parse_draftee_stat_pages(drafted_players: Dict[int, Dict[str, List[models.NFLDraftee]]]) -> None:
-    ''' Enriches NFLDraftee stats from cached html files'''
+def parse_draftee_stat_pages(
+    drafted_players: Dict[int, Dict[str, List[models.NFLDraftee]]],
+) -> None:
+    """Enriches NFLDraftee stats from cached html files"""
 
     if len(drafted_players) == 0:
         logger.debug(" No players drafted! <parse_draftee_stat_pages>")
@@ -41,15 +45,19 @@ def parse_draftee_stat_pages(drafted_players: Dict[int, Dict[str, List[models.NF
     for year, position_list in drafted_players.items():
         for position, position_players in position_list.items():
             for athlete in position_players:
-                name = getattr(athlete.player, "name", None) or getattr(athlete, "name", None)
-                filepath = os.path.join(config.CACHE_DIR, stat_path(year=year, position=position, name=name))
+                name = getattr(athlete.player, "name", None) or getattr(
+                    athlete, "name", None
+                )
+                filepath = os.path.join(
+                    config.CACHE_DIR, stat_path(year=year, position=position, name=name)
+                )
 
-                #skip if not cached
+                # skip if not cached
                 if not os.path.exists(filepath):
                     logger.info(f"Cache missing html for {name}")
                     continue
 
-                #load from cache
+                # load from cache
                 try:
                     with open(filepath, "r", encoding="utf-8") as file_ref:
                         html = file_ref.read()
@@ -60,7 +68,7 @@ def parse_draftee_stat_pages(drafted_players: Dict[int, Dict[str, List[models.NF
                 if not html:
                     logger.warning(f"Empty HTML from cache for {name}")
                     continue
-                #enrich profile     inplace
+                # enrich profile     inplace
                 Parser.parse_player_page(html=html, player=athlete.player)
 
     return None

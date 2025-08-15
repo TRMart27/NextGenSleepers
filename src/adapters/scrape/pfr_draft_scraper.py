@@ -1,6 +1,6 @@
-'''
+"""
 Wraps network calls to fetch previous draft pages from PFR
-'''
+"""
 
 from src import config
 import src.adapters.http.client as http
@@ -14,10 +14,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-#---- Helper Functions ----
+
+# ---- Helper Functions ----
 def _cache_html(html: str, filepath: str):
 
-    #ensure directories exist before writing
+    # ensure directories exist before writing
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
 
     try:
@@ -44,48 +45,50 @@ def _load_html(path: str) -> str:
         logger.debug(f"Unexpected Erorr: {e}")
         return None
 
+
 def clean_name(name: str) -> str:
-    ''' Ensure the player name is safe for path building
-    strips whitespaces'''
+    """Ensure the player name is safe for path building
+    strips whitespaces"""
 
     if not name:
-        logger.debug('Invalid player name <normalize_name>')
+        logger.debug("Invalid player name <normalize_name>")
         raise ValueError("Invalid player name <normalize_name>")
 
     return name.replace(" ", "")
 
+
 def stat_path(year: int, position: str, name: str) -> str:
-    ''' Builds the relative filepath to the stats HTML'''
+    """Builds the relative filepath to the stats HTML"""
 
     name = clean_name(name=name)
     return os.path.join("stat_pages", str(year), position, f"{name}.html")
 
 
 def _page_path(year: int) -> str:
-    ''' Builds the relative filepath to the page HTML '''
+    """Builds the relative filepath to the page HTML"""
 
     return os.path.join(config.CACHE_DIR, "data", "raw", "pages", f"{year}.html")
 
 
-
 # ---- Public Wrappers ----
-def fetch_draft_pages(year_start: int, year_end: int,
-                      *, client: http.HttpClient) -> Dict[int, str]:
-    '''
+def fetch_draft_pages(
+    year_start: int, year_end: int, *, client: http.HttpClient
+) -> Dict[int, str]:
+    """
     Calls fetch_draft_page for years between start and end
     :param year_start:
     :param year_end:
     :param client:
 
     :return:
-    '''
+    """
 
     out: Dict[int, str] = {}
     for year in range(year_start, year_end + 1):
-        #build path
+        # build path
         save_path = os.path.join(config.CACHE_DIR, _page_path(year))
 
-        #check
+        # check
         html = _load_html(save_path) if os.path.exists(save_path) else None
         if html is None:
             html = Scraper.fetch_draft_page(year=year, client=client)
@@ -97,15 +100,18 @@ def fetch_draft_pages(year_start: int, year_end: int,
 
     return out
 
-def fetch_drafted_profile_html(drafted_players: Dict[int, Dict[str, List[models.NFLDraftee]]],
-                               *, client: http.HttpClient)\
-        -> Dict[int, Dict[str, List[str]]]:
-    '''
+
+def fetch_drafted_profile_html(
+    drafted_players: Dict[int, Dict[str, List[models.NFLDraftee]]],
+    *,
+    client: http.HttpClient,
+) -> Dict[int, Dict[str, List[str]]]:
+    """
     Wraps fetch_player_page
     :param pages:
 
     :return:
-    '''
+    """
     html_all: Dict[int, Dict[str, List[str]]] = {}
 
     for year, position_list in drafted_players.items():
@@ -115,25 +121,29 @@ def fetch_drafted_profile_html(drafted_players: Dict[int, Dict[str, List[models.
             stats_htmls: List[str] = []
 
             for athlete in position_players:
-                #skip missing links
+                # skip missing links
                 if athlete.stats_link is None:
                     continue
 
-                #build path
-                save_path = os.path.join(config.CACHE_DIR, stat_path(year, position, athlete.player.name))
+                # build path
+                save_path = os.path.join(
+                    config.CACHE_DIR, stat_path(year, position, athlete.player.name)
+                )
 
-                #load if cached
+                # load if cached
                 html = _load_html(save_path) if os.path.exists(save_path) else None
                 if html is None:
-                    html = Scraper.fetch_player_page(href=athlete.stats_link, client=client)
+                    html = Scraper.fetch_player_page(
+                        href=athlete.stats_link, client=client
+                    )
                     if html is None:
                         logger.warning(f"Failed to fetch page for {athlete.player}")
-                    #persist
+                    # persist
                     _cache_html(html=html, filepath=save_path)
 
-                #append
+                # append
                 stats_htmls.append(html)
-            #store
+            # store
             html_all[year][position] = stats_htmls
 
     return html_all

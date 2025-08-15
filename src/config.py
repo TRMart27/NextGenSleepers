@@ -15,7 +15,10 @@ load_dotenv()
 BASE_DIR: Final[Path] = Path(__file__).parent.resolve().parent
 DATA_DIR: Final[Path] = BASE_DIR / "data"
 CACHE_DIR: Final[Path] = BASE_DIR / "cache"
-
+(CACHE_DIR / "data" / "raw" / "pages").mkdir(parents=True, exist_ok=True)
+(CACHE_DIR / "data" / "raw" / "stat_pages").mkdir(parents=True, exist_ok=True)
+(DATA_DIR / "json").mkdir(parents=True, exist_ok=True)
+(DATA_DIR / "sqlite").mkdir(parents=True, exist_ok=True)
 
 # ---- Make Directories ---- #
 DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -27,8 +30,8 @@ USER_AGENT: Final[str] = (
     "prospect_clustering-bot/1.0 (+https://github.com/TRMart27/NextGenSleepers)"
 )
 
-REQUEST_COOLDOWN: Final[int] = float(os.getenv("PFR_REQUEST_COOLDOWN", 10.0))
-REQUEST_JAIL: Final[int] = float(os.getenv("PFR_REQUEST_JAIL", 3600.0))
+REQUEST_COOLDOWN: Final[float] = float(os.getenv("PFR_REQUEST_COOLDOWN", 10.0))
+REQUEST_JAIL: Final[float] = float(os.getenv("PFR_REQUEST_JAIL", 3600.0))
 REQUEST_MAX: Final[int] = int(os.getenv("PFR_REQUEST_MAX", "1"))
 MAX_RETIRES: Final[int] = int(os.getenv("PFR_MAX_RETIRES", "3"))
 BACKOFF_FACTOR: Final[float] = float(os.getenv("PFR_BACKOFF_FACTOR", 3.0))

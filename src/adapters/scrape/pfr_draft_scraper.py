@@ -5,6 +5,7 @@ Wraps network calls to fetch previous draft pages from PFR
 from src import config
 import src.adapters.http.client as http
 import src.adapters.scrape.pfr_scraper as Scraper
+import src.core.models as models
 
 from typing import Dict
 from typing import List
@@ -61,7 +62,7 @@ def stat_path(year: int, position: str, name: str) -> str:
     """Builds the relative filepath to the stats HTML"""
 
     name = clean_name(name=name)
-    return os.path.join("stat_pages", str(year), position, f"{name}.html")
+    return os.path.join("data", "raw", "stat_pages", str(year), position, f"{name}.html")
 
 
 def _page_path(year: int) -> str:

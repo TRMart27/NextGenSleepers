@@ -3,20 +3,14 @@ Calls CollegeFootballData.com API
 '''
 
 import cfbd
-from cfbd.rest import ApiException
 
 from functools import lru_cache
 import logging
 
-from typing import Dict, Any, List, Optional
-
 import datetime as dt
 import time
-import pandas as pd
 
-from config import CFBD_API_KEY
-import core.models as Models
-
+from src.config import CFBD_API_KEY
 
 logger = logging.getLogger(__name__)
 

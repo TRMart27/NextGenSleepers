@@ -10,9 +10,9 @@ import os
 import logging
 from typing import Iterable, Iterator, Optional
 
-from config import DATA_DIR
-from core.models import Player
-from core.models import make_player
+from src.config import DATA_DIR
+from src.core.models import Player
+from src.core.models import make_player
 
 logger = logging.getLogger(__name__)
 

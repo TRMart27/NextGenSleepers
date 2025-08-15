@@ -3,15 +3,15 @@ HTML parsers for Pro-Football-Reference pages.
 '''
 
 import re
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Optional
 from collections import defaultdict
 
 from bs4 import BeautifulSoup
 from bs4 import Tag
 from bs4 import Comment
 
-import config
-from core.models import Player, make_player, make_draftee, NFLDraftee
+from src import config
+from src.core.models import Player, make_player, make_draftee, NFLDraftee
 
 import logging
 

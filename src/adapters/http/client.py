@@ -15,7 +15,7 @@ import requests
 from requests.exceptions import HTTPError
 from urllib3.util.retry import Retry
 
-import config
+from src import config
 
 #get mesa a logger !
 logger = logging.getLogger(__name__)

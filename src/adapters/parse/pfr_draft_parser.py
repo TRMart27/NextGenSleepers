@@ -1,7 +1,6 @@
-import config
-import adapters.parse.pfr_parser as Parser
-from adapters.scrape.pfr_draft_scraper import stat_path
-import core.models as Models
+from src import config
+import src.adapters.parse.pfr_parser as Parser
+from src.adapters.scrape.pfr_draft_scraper import stat_path
 
 from collections import defaultdict
 
@@ -13,7 +12,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 def parse_draft_pages(pages: Dict[int, str])\
-    -> Dict[int, Dict[str, List[Models.NFLDraftee]]]:
+    -> Dict[int, Dict[str, List[models.NFLDraftee]]]:
     '''
 
     :param pages:
@@ -32,7 +31,7 @@ def parse_draft_pages(pages: Dict[int, str])\
     return drafted_players
 
 
-def parse_draftee_stat_pages(drafted_players: Dict[int, Dict[str, List[Models.NFLDraftee]]]) -> None:
+def parse_draftee_stat_pages(drafted_players: Dict[int, Dict[str, List[models.NFLDraftee]]]) -> None:
     ''' Enriches NFLDraftee stats from cached html files'''
 
     if len(drafted_players) == 0:

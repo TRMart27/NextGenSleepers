@@ -2,10 +2,9 @@
 Wraps network calls to fetch previous draft pages from PFR
 '''
 
-import config
-import adapters.http.client as http
-import adapters.scrape.pfr_scraper as Scraper
-import core.models as Models
+from src import config
+import src.adapters.http.client as http
+import src.adapters.scrape.pfr_scraper as Scraper
 
 from typing import Dict
 from typing import List
@@ -98,8 +97,8 @@ def fetch_draft_pages(year_start: int, year_end: int,
 
     return out
 
-def fetch_drafted_profile_html(drafted_players: Dict[int, Dict[str, List[Models.NFLDraftee]]],
-                           *, client: http.HttpClient)\
+def fetch_drafted_profile_html(drafted_players: Dict[int, Dict[str, List[models.NFLDraftee]]],
+                               *, client: http.HttpClient)\
         -> Dict[int, Dict[str, List[str]]]:
     '''
     Wraps fetch_player_page

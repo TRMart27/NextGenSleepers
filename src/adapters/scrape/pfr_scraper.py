@@ -6,8 +6,8 @@ user and http.py
 
 import datetime as _dt
 
-import config
-import adapters.http.client as http
+from src import config
+import src.adapters.http.client as http
 
 
 #get the year ranges

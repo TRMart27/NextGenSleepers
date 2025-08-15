@@ -85,7 +85,7 @@ class HttpClient:
 
         try:
             response.raise_for_status()
-        except HTTPError as e:
+        except HTTPError:
             logger.debug(
                 f"HTTP Error {response.status_code} for {request_url}: {response.text}"
             )

@@ -3,15 +3,8 @@ Defines classes for players and positional stats.
 """
 
 from dataclasses import dataclass
-from dataclasses import asdict
-from dataclasses import field
 
-from typing import Dict
-from typing import Any
-from typing import Type
-from typing import TypeVar
-from typing import Generic
-from typing import Optional
+from typing import Dict, Type, TypeVar, Generic, Optional
 
 T = TypeVar("T")
 

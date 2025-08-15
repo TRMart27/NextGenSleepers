@@ -7,7 +7,7 @@ import os
 import logging
 import tempfile
 
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from src.config import DATA_DIR
 from src.core.models import POSITION_CLASS_MAP
@@ -158,7 +158,7 @@ class DrafteeStorage:
                 return []
 
             if json_payload.get("year") != year or normalize_position(
-                payload.get("position", "")
+                json_payload.get("position", "")
             ) != normalize_position(position):
                 logger.warning(f"Malformed header in file: {filepath}")
 

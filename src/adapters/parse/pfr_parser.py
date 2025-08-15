@@ -338,7 +338,6 @@ def parse_player_page(html: str, player: Player) -> None:
         raise ValueError(f"Invalid position {player.position}")
 
     soup = BeautifulSoup(html, "html.parser")
-    all_players = {}
 
     position_schema = POSITION_SCHEMA[player.position]
     for table_id, fields in position_schema["standards"].items():

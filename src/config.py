@@ -62,9 +62,7 @@ def cfbd_headers() -> Dict[str, str]:
 
     return {"Authorization": f"Bearer {CFBD_API_KEY}"}
 
-    # ---- Selenium Flags ---- #
-
-
+# ---- Selenium Flags ---- #
 SELENIUM_FLAGS: Final[List[str]] = [
     "--headless",
     "--disable-gpu",

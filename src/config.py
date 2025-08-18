@@ -44,8 +44,8 @@ CFBD_API_ROOT: Final[str] = "https://api.collegefootballdata.com/"
 SPORTS_REF_ROOT: Final[str] = "https://www.sports-reference.com"
 
 # ---- Secrets ---- #
-
-CFBD_API_KEY: Final[str | None] = os.getenv("CFBD_API_KEY", None).strip()
+_key = os.getenv("CFBD_API_KEY")
+CFBD_API_KEY: Final[str | None] = _key.strip() if _key else None
 if CFBD_API_KEY is None:
     print("[ERROR] CFBD API Key not loaded!")
 

@@ -54,7 +54,13 @@ class HttpClient:
         adapter = requests.adapters.HTTPAdapter(max_retries=retry)
         self._session.mount("http://", adapter)
         self._session.mount("https://", adapter)
-        self._session.headers.update({"User-Agent": config.USER_AGENT})
+        self._session.headers.update({
+            "User-Agent": config.USER_AGENT,
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Referer": "https://www.pro-football-reference.com/",
+            "Connection": "keep-alive",
+        })
 
     # ---- HTTP request implementations ----
     def send_request(

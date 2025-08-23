@@ -18,7 +18,6 @@ logger = logging.getLogger(__name__)
 
 # ---- Helper Functions ----
 def _cache_html(html: str, filepath: str):
-
     # ensure directories exist before writing
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
 
@@ -33,8 +32,7 @@ def _cache_html(html: str, filepath: str):
     return
 
 
-def _load_html(path: str) -> str:
-
+def _load_html(path: str) -> str | None:
     if not os.path.exists(path):
         logger.debug(f"File not found: {path}")
         return None
@@ -72,9 +70,10 @@ def _page_path(year: int) -> str:
 
 
 # ---- Public Wrappers ----
-def fetch_draft_pages(
-    year_start: int, year_end: int, *, client: http.HttpClient
-) -> Dict[int, str]:
+def fetch_draft_pages(year_start: int, year_end: int,
+                      *,
+                      client: http.HttpClient
+                      ) -> Dict[int, str]:
     """
     Calls fetch_draft_page for years between start and end
     :param year_start:
@@ -103,14 +102,14 @@ def fetch_draft_pages(
 
 
 def fetch_drafted_profile_html(
-    drafted_players: Dict[int, Dict[str, List[models.NFLDraftee]]],
-    *,
-    client: http.HttpClient,
+        drafted_players: Dict[int, Dict[str, List[models.NFLDraftee]]],
+        *,
+        client: http.HttpClient,
 ) -> Dict[int, Dict[str, List[str]]]:
     """
     Wraps fetch_player_page
-    :param pages:
-
+    :param client:
+    :param drafted_players:
     :return:
     """
     html_all: Dict[int, Dict[str, List[str]]] = {}
@@ -123,7 +122,7 @@ def fetch_drafted_profile_html(
 
             for athlete in position_players:
                 # skip missing links
-                if athlete.stats_link is None:
+                if athlete.player.stats_link is None:
                     continue
 
                 # build path
@@ -135,7 +134,7 @@ def fetch_drafted_profile_html(
                 html = _load_html(save_path) if os.path.exists(save_path) else None
                 if html is None:
                     html = Scraper.fetch_player_page(
-                        href=athlete.stats_link, client=client
+                        href=athlete.player.stats_link, client=client
                     )
                     if html is None:
                         logger.warning(f"Failed to fetch page for {athlete.player}")

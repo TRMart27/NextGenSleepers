@@ -14,7 +14,7 @@ from src.core.models import make_player
 
 logger = logging.getLogger(__name__)
 
-_DB_PATH = os.path.join(DATA_DIR, "db", "prospects.db")
+_DB_PATH = os.path.join(DATA_DIR, "sqlite", "prospects.db")
 
 
 _SQL_SCHEMA = """
@@ -93,7 +93,7 @@ class ProspectStorage:
             "weight": getattr(player, "weight", None),
             "college": getattr(player, "college", None),
             "stats_link": getattr(player, "stats_link", None),
-            "stats_json": json.loads(getattr(player, "stats_json", "{}")),
+            "stats_json": getattr(player, "stats_json", None),
         }
 
         # collection positional stats in a json file

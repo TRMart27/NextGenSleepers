@@ -1,5 +1,4 @@
 """ """
-
 import dataclasses
 import json
 
@@ -73,7 +72,7 @@ def prepare_payload(year: int, pos: str, data: List[Dict[str, Any]]) -> Dict[str
 
 
 # ---- File Handling ----
-def write_json(filepath: str, data: Dict[str, Any]) -> None:
+def write_json(filepath: str, data: Any) -> None:
     """
 
     :param filepath:
@@ -81,12 +80,12 @@ def write_json(filepath: str, data: Dict[str, Any]) -> None:
     :return:
     """
 
-    dir = os.path.dirname(filepath)
-    os.makedirs(dir, exist_ok=True)
+    json_dir = os.path.dirname(filepath)
+    os.makedirs(json_dir, exist_ok=True)
     with tempfile.NamedTemporaryFile(
-        "w", delete=False, encoding="utf-8", dir=dir
+        "a", delete=False, encoding="utf-8", dir=json_dir
     ) as temp_file:
-        json.dump(data, temp_file, ensure_ascii=False, indent=2)
+        json.dump(data, temp_file,ensure_ascii=False, indent=2)
         temp_filepath = temp_file.name
     os.replace(temp_filepath, filepath)
 

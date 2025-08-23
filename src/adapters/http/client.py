@@ -10,13 +10,16 @@ import logging
 from collections import deque
 from typing import Deque, Dict, Any, Tuple
 
-import requests
-from requests.exceptions import HTTPError
+# import requests
+# from requests.adapters import HTTPAdapter
+# from requests.exceptions import HTTPError
+from curl_cffi import requests as cf
 from urllib3.util.retry import Retry
 
 from src import config
 
 # get mesa a logger !
+logging.basicConfig(filename="NextGenSleepers.log", level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
@@ -26,78 +29,89 @@ class HttpClient:
     """
 
     def __init__(
-        self,
-        cooldown: float,
-        jail_time: float,
-        max_requests: int,
-        session: requests.Session = None,
+            self,
+            cooldown: float,
+            jail_time: float,
+            max_requests: int,
+            session: cf.Session = None,
+            *,
+            http_version: str = "v2"
     ):
 
         self.cooldown = cooldown
         self.jail_time = jail_time
         self.max_requests = max_requests
+        self.http_version = http_version
 
         self._recent_calls: Deque[float] = deque(maxlen=max_requests)
-        self._session: requests.Session = session or requests.Session()
-
-        retry = Retry(
-            total=config.MAX_RETIRES,
-            connect=config.MAX_RETIRES,
-            read=config.MAX_RETIRES,
-            backoff_factor=config.BACKOFF_FACTOR,
-            status_forcelist=[429, 500, 502, 503, 504],
-            allowed_methods=["GET", "POST"],
-            raise_on_status=False,
-            respect_retry_after_header=True,
+        self._session: cf.Session = session or cf.Session(
+            impersonate="chrome",
+            timeout=None,
         )
 
-        adapter = requests.adapters.HTTPAdapter(max_retries=retry)
-        self._session.mount("http://", adapter)
-        self._session.mount("https://", adapter)
-        self._session.headers.update({
-            "User-Agent": config.USER_AGENT,
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Accept-Language": "en-US,en;q=0.9",
-            "Referer": "https://www.pro-football-reference.com/",
-            "Connection": "keep-alive",
-        })
+        self._max_retries = config.MAX_RETIRES
+        self._backoff_factor = config.BACKOFF_FACTOR
 
     # ---- HTTP request implementations ----
     def send_request(
-        self,
-        request_url: str,
-        *,
-        headers: Dict[str, str] = None,
-        params: Dict[str, Any] = None,
-        timeout: Tuple[float] = (4.0, 10.0),
+            self,
+            request_url: str,
+            *,
+            headers: Dict[str, str] = None,
+            params: Dict[str, Any] = None,
+            timeout: float = 14.0,
     ):
         self._respect_limit()
 
         # be weird
-        time.sleep(random.uniform(0.0, 0.2))
-        # now go
-        response = self._session.get(
-            request_url, params=params, headers=headers, timeout=timeout
-        )
+        time.sleep(random.uniform(1.0, 3.2))
 
-        if response.status_code == 429:
-            logger.debug(
-                f"429 for {request_url}, sleeping {self.jail_time} then retrying"
-            )
-            time.sleep(self.jail_time)
-            response = self._session.get(
-                request_url, params=params, headers=headers, timeout=timeout
-            )
+        attempt = 0
+        while True:
+            attempt += 1
+            try:
+                response = self._session.get(
+                    request_url,
+                    params=params,
+                    headers=headers,
+                    timeout=timeout,
+                    http_version=self.http_version
+                )
 
-        try:
-            response.raise_for_status()
-        except HTTPError:
-            logger.debug(
-                f"HTTP Error {response.status_code} for {request_url}: {response.text}"
-            )
-            raise
+                if response.status_code == 429:
+                    logger.debug(
+                        f"429 for {request_url}, sleeping {self.jail_time} then retrying"
+                    )
+                    time.sleep(self.jail_time)
 
-        return response
+                if response.status_code == 403:
+                    logger.debug(
+                        f"403 for {request_url}:\n"
+                        f"{response.text}"
+                    )
+
+                if response.status_code in (429, 500, 502, 503, 504):
+                    if attempt < self._max_retries:
+                        sleep_for = self._backoff(attempt)
+
+                        logger.debug(f"[RETRY] {response.status_code} for {request_url}; sleeping {sleep_for} seconds")
+                        time.sleep(sleep_for)
+                        continue
+
+                response.raise_for_status()
+                return response
+
+            except Exception as e:
+                if attempt < self._max_retries:
+                    sleep_for = self._backoff(attempt)
+                    time.sleep(sleep_for)
+                    continue
+                logger.debug(f"giving up {type(e).__name__} on {request_url}")
+                raise
+
+    def _backoff(self, attempt: int) -> float:
+        base = self._backoff_factor * (2 ** (attempt - 1))
+        return base + random.uniform(0, base)
 
     def _respect_limit(self) -> None:
         time_stamp = time.monotonic()
@@ -130,10 +144,9 @@ class HttpClient:
 
 
 def get_client(
-    *,
-    cooldown: float = config.REQUEST_COOLDOWN,
-    jail_time: float = config.REQUEST_JAIL,
-    max_requests: int = config.REQUEST_MAX,
+        *,
+        cooldown: float = config.REQUEST_COOLDOWN,
+        jail_time: float = config.REQUEST_JAIL,
+        max_requests: int = config.REQUEST_MAX,
 ) -> HttpClient:
-
     return HttpClient(cooldown=cooldown, jail_time=jail_time, max_requests=max_requests)

@@ -6,9 +6,7 @@ import re
 from typing import List, Dict, Optional
 from collections import defaultdict
 
-from bs4 import BeautifulSoup
-from bs4 import Tag
-from bs4 import Comment
+from bs4 import BeautifulSoup, Tag, Comment
 
 from src import config
 from src.core.models import Player, make_player, make_draftee, NFLDraftee
@@ -291,7 +289,9 @@ def parse_draft_page(html: str) -> Dict[str, List[Player]]:
     all_players = defaultdict(list)
 
     table = soup.find("table", {"id": "drafts"})
-    if not table or not table.tfoot:
+    if not table or not table.tbody:
+        if table:
+            logger.warning("its the tbody")
         logger.warning("[ERROR] No table found")
         return {}
 
@@ -303,7 +303,7 @@ def parse_draft_page(html: str) -> Dict[str, List[Player]]:
 
         try:
             href = row.find("td", {"data-stat": "college_link"}).a["href"]
-        except AttributeError:
+        except (TypeError, AttributeError):
             href = None
 
         if position not in config.NFL_POSITION_MAP:
@@ -333,7 +333,6 @@ def parse_draft_page(html: str) -> Dict[str, List[Player]]:
 
 
 def parse_player_page(html: str, player: Player) -> None:
-
     if player.position not in POSITION_SCHEMA:
         raise ValueError(f"Invalid position {player.position}")
 
@@ -346,8 +345,9 @@ def parse_player_page(html: str, player: Player) -> None:
             logger.warning(f"Table {table_id} missing for {player.name}")
             continue
 
-        career_row = table.tfoot.find("tr", {"id": f"{table_id}.Career"})
+        career_row = table.tfoot.find("tr", {"id": f"{table_id}.----"})
         if career_row is None:
+            logger.warning(f"Missing career row for {player.name}")
             continue
 
         for field in fields:
@@ -357,15 +357,15 @@ def parse_player_page(html: str, player: Player) -> None:
                 value = _to_int(raw_text)
             else:
                 value = _to_float(raw_text)
+
             setattr(player, field, value)
 
 
 def parse_height_weight(html: str, athlete):
     """
 
+    :param athlete:
     :param html:
-    :param player:
-
     :return:
     """
     soup = BeautifulSoup(html, "html.parser")
@@ -383,7 +383,7 @@ def parse_height_weight(html: str, athlete):
         weight_text = spans[1].get_text(strip=True)
 
         if not re_height_weight.fullmatch(height_text) or not weight_text.endswith(
-            "lb"
+                "lb"
         ):
             continue
 
